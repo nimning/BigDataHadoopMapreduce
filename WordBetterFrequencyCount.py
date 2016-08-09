@@ -1,8 +1,10 @@
 from mrjob.job import MRJob
+import re
 
-class MRWordFrequencyCount(MRJob):
+wordRegExp = re.compile(r"[\w']+")
+class MRBetterWordFrequencyCount(MRJob):
     def mapper(self, _, line):
-        words = line.split(" ")
+        words = wordRegExp.findall(line)
         for word in words:
             yield (word.lower(), 1)
             
@@ -10,4 +12,4 @@ class MRWordFrequencyCount(MRJob):
         yield (key, sum(values))
         
 if __name__ == "__main__":
-    MRWordFrequencyCount.run()
+    MRBetterWordFrequencyCount.run()
