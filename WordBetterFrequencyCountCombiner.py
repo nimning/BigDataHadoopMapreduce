@@ -9,7 +9,8 @@ class MRBetterWordFrequencyCountCombiner(MRJob):
         for word in words:
             yield (word.lower(), 1)
     
-    #do the reducer's work in mapper's node
+    #do the reducer's work in mapper's node. It may increase the
+    #performance
     def combiner(self, key, values):
         yield (key, sum(values))
         
@@ -18,6 +19,8 @@ class MRBetterWordFrequencyCountCombiner(MRJob):
         
     #combiner and reducer only differ in output, the input needs to
     #be the same
+    
+    #combiner may not be called
         
 if __name__ == "__main__":
     MRBetterWordFrequencyCountCombiner.run()

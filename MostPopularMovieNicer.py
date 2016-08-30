@@ -11,30 +11,38 @@ class MRMostPopularMovieNicer(MRJob):
         #add_file_option: Indicates there is another file we want to send along with everything else to the map reduce job
         #'--items': when we pass a parameter (file) after "--items", that file will be distributed along with the code for the script to every node that this job might runs on
         #movieID: moviedName passed along to everynode of the job where it is needed
-        self.add_file_option('--items',help = 'Path to u.item')
+        self.add_file_option('--items',help = 'u.ITEM')
+        
     def steps(self):
-        return [MRStep(mapper = self.rateCountMapper, 
-                       reducer_init = self.reducer_init,
-                       reducer = self.rateCountReducer),
-               MRStep(reducer = self.maxRateCountReducer)]
+        return [
+            MRStep(mapper = self.rateCountMapper, 
+                   reducer_init = self.reducer_init,
+                   reducer = self.rateCountReducer),
+            MRStep(mapper = self.mapperPassthrough,
+                   reducer = self.maxRateCountReducer)
+        ]
     def reducer_init(self):
         self.movieNames = {}
         
         with open("u.ITEM") as f:
             for line in f:
                 fields = line.split('|')
-                self.movieNames[fields[0]] = fields[1]
+                #print (fields[0], fields[1])
+                self.movieNames[fields[0]] = fields[1].decode('utf-8', 'ignore')
             
     def rateCountMapper(self, key, line):
         (userID, movieID, rating, timeStamp) = line.split("\t")
         yield(movieID, 1)
         
     def rateCountReducer(self, key, values):
+        #print ("sum(vlaues):", sum(values), " movieNames[key]:", self.movieNames[key])
         yield None, (sum(values), self.movieNames[key])
-        
+    
+    def mapperPassthrough(self, key, values):
+        yield (key, values);
     def maxRateCountReducer(self, key, values):
         #'max' only look at the first element of each tuple of your values if your 
-        #values are tuples.
+        #values are tuples.  
         yield max(values)
         
 if __name__ == "__main__":
